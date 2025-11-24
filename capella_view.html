@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voir l’objectif – Capella MONEY</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg,#f0f9ff,#e0f2fe); }
+        .card { background:white; border-radius:24px; padding:40px; box-shadow:0 20px 40px rgba(14,165,233,0.15); }
+        .icon-big { width:90px; height:90px; border-radius:24px; display:flex; align-items:center; justify-content:center;
+            background:linear-gradient(135deg,#0ea5e9,#7dd3fc); box-shadow:0 15px 30px rgba(14,165,233,0.3); }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <div class="ml-50 p-8 max-w-4xl mx-auto">
+
+        <a href="dashboard.html" class="inline-flex items-center text-sky-700 font-bold mb-6 hover:underline">
+            <i class="fas fa-arrow-left mr-2"></i> Retour au tableau de bord
+        </a>
+
+        <div class="flex items-center gap-4 mb-10">
+            <div class="icon-big"><i id="goalIcon" class="fas fa-house text-white text-4xl"></i></div>
+            <div>
+                <h1 id="goalTitle" class="text-4xl font-black text-sky-700">Titre objectif</h1>
+                <p id="goalDesc" class="text-gray-600 text-lg">Description de l’objectif</p>
+                <div class="mt-4 text-sm text-gray-500 flex items-center gap-3">
+                    <span id="metaCreated">Créé: -</span>
+                    <span class="mx-2">•</span>
+                    <span id="metaUpdated">Mis à jour: -</span>
+                    <span class="mx-2">•</span>
+                    <span id="badgePriority" class="px-2 py-1 rounded text-sm font-semibold"></span>
+                    <span id="badgeImportance" class="text-yellow-600 text-sm font-semibold"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="card text-center">
+                <p class="text-5xl font-black text-sky-600" id="goalTarget">0€</p>
+                <p class="text-gray-500 mt-2 text-lg">Montant cible</p>
+            </div>
+
+            <div class="card text-center">
+                <p class="text-5xl font-black text-green-600" id="goalDaily">0€</p>
+                <p class="text-gray-500 mt-2 text-lg">Par jour</p>
+            </div>
+
+            <div class="card text-center">
+                <p class="text-5xl font-black text-yellow-600" id="goalDays">0 jours</p>
+                <p class="text-gray-500 mt-2 text-lg">Durée estimée</p>
+            </div>
+        </div>
+
+        <!-- Progress bar and actions -->
+        <div class="card mt-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-sky-800">Progression</h3>
+                <div class="flex items-center gap-3">
+                    <button id="btnExport" class="px-3 py-2 bg-gray-100 rounded text-gray-700 hover:bg-gray-200">Exporter JSON</button>
+                    <button id="btnDuplicate" class="px-3 py-2 bg-sky-50 text-sky-700 rounded hover:bg-sky-100">Dupliquer</button>
+                </div>
+            </div>
+
+            <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
+                <div id="progressBar" class="h-4 bg-gradient-to-r from-green-400 to-yellow-400 w-0"></div>
+            </div>
+            <div class="flex justify-between text-sm text-gray-600 mt-2">
+                <div id="progressPercent">0%</div>
+                <div id="progressSummary">0€ déposés · 0 jours passés</div>
+            </div>
+        </div>
+
+        <div class="card mt-10">
+            <h2 class="text-3xl font-bold text-sky-800 mb-6">Timeline de ton épargne</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-sky-50 p-6 rounded-2xl text-center border border-sky-200">
+                    <p class="text-3xl font-black text-sky-600" id="goalStart">-</p>
+                    <p class="text-gray-500">Début</p>
+                </div>
+
+                <div class="bg-green-50 p-6 rounded-2xl text-center border border-green-200">
+                    <p class="text-3xl font-black text-green-600" id="goalEnd">-</p>
+                    <p class="text-gray-500">Fin prévue</p>
+                </div>
+
+                <div class="bg-yellow-50 p-6 rounded-2xl text-center border border-yellow-200">
+                    <p class="text-3xl font-black text-yellow-600" id="goalSaved">0€</p>
+                    <p class="text-gray-500">Total déposé si tu commences</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-6 justify-end mt-12">
+            <a href="capella_edit.html" class="px-8 py-4 bg-sky-600 text-white rounded-xl font-bold shadow-md hover:bg-sky-700">
+                Modifier l’objectif
+            </a>
+            <button class="px-8 py-4 bg-red-500 text-white rounded-xl font-bold shadow-md hover:bg-red-600">
+                Supprimer
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Lecture depuis localStorage selon id en query param
+        const STORAGE_KEY = 'capella_goals';
+
+        function getGoals() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e){ return []; } }
+        function saveGoals(list) { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+        function getParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+
+        const iconMap = { house:'fa-house', car:'fa-car', plane:'fa-plane', heart:'fa-heart', briefcase:'fa-briefcase', 'graduation-cap':'fa-graduation-cap', diamond:'fa-gem', tree:'fa-tree' };
+
+        const goalId = getParam('id');
+
+        if (!goalId) {
+            document.body.innerHTML = `<div class="p-8 max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Aucun objectif sélectionné</h2><p class="mb-6">Créez un nouvel objectif ou revenez au tableau de bord.</p><a class="px-6 py-3 bg-sky-600 text-white rounded" href="capella_create.html">Créer un objectif</a></div>`;
+        } else {
+            const goals = getGoals();
+            const goal = goals.find(g => g.id === goalId);
+
+            if (!goal) {
+                alert('Objectif introuvable.');
+                window.location.href = 'capella_create.html';
+            } else {
+                // Calculs
+                const target = Number(goal.target) || 0;
+                const daily = Number(goal.daily) || 0;
+                const days = daily > 0 ? Math.ceil(target / daily) : 0;
+                const startDate = goal.start ? new Date(goal.start) : new Date();
+                const end = new Date(startDate);
+                end.setDate(end.getDate() + days);
+
+                document.getElementById('goalTitle').textContent = goal.title || '—';
+                document.getElementById('goalDesc').textContent = goal.description || '';
+                document.getElementById('goalIcon').className = `fas ${iconMap[goal.icon] || 'fa-house'} text-4xl text-white`;
+
+                document.getElementById('goalTarget').textContent = target.toLocaleString('fr') + '€';
+                document.getElementById('goalDaily').textContent = (daily ? daily + '€' : '—');
+                document.getElementById('goalDays').textContent = (days ? days + ' jours' : '—');
+
+                document.getElementById('goalStart').textContent = startDate.toLocaleDateString('fr-FR');
+                document.getElementById('goalEnd').textContent = end.toLocaleDateString('fr-FR');
+                document.getElementById('goalSaved').textContent = target.toLocaleString('fr') + '€';
+
+                // Deadline / priority / importance
+                const deadlineVal = goal.deadline ? new Date(goal.deadline) : null;
+                if (deadlineVal) {
+                    const daysUntilDeadline = Math.max(0, Math.ceil((deadlineVal - new Date()) / (1000*60*60*24))); 
+                    const elDeadline = document.createElement('div');
+                    elDeadline.className = 'text-sm text-gray-600 mt-3';
+                    elDeadline.textContent = 'Jours restants avant deadline: ' + daysUntilDeadline + ' jours';
+                    document.querySelector('.card.mt-10')?.after(elDeadline);
+                }
+
+                // Show priority badge
+                const priorityEl = document.getElementById('badgePriority');
+                if (goal.priority) {
+                    priorityEl.textContent = goal.priority === 'high' ? 'Haute priorité' : (goal.priority === 'medium' ? 'Priorité moyenne' : 'Basse priorité');
+                    priorityEl.style.background = goal.priority === 'high' ? '#fee2e2' : (goal.priority==='medium' ? '#e0f2fe' : '#ecfccb');
+                    priorityEl.style.color = goal.priority === 'high' ? '#991b1b' : (goal.priority==='medium' ? '#0369a1' : '#365314');
+                }
+
+                // Importance stars
+                const importanceVal = goal.importance || 3;
+                document.getElementById('badgeImportance').textContent = 'Importance: ' + ('★'.repeat(importanceVal) + '☆'.repeat(5-importanceVal));
+
+                // Determine if achievable before deadline
+                let statusText = 'Indéterminé';
+                if (deadlineVal && daily > 0) {
+                    const daysNeeded = Math.ceil(target / daily);
+                    const daysUntilDeadline = Math.ceil((deadlineVal - new Date(startDate)) / (1000*60*60*24));
+                    if (daysNeeded <= daysUntilDeadline) {
+                        statusText = 'En bonne voie';
+                        // green badge
+                    } else {
+                        statusText = 'Risque de retard';
+                    }
+                }
+
+                // status display
+                const statusBox = document.createElement('div');
+                statusBox.className = 'mt-4 inline-block px-3 py-2 rounded font-semibold';
+                statusBox.textContent = statusText;
+                if (statusText === 'En bonne voie') { statusBox.style.background = '#dcfce7'; statusBox.style.color = '#166534'; }
+                else if (statusText === 'Risque de retard') { statusBox.style.background = '#fff7ed'; statusBox.style.color = '#92400e'; }
+                else { statusBox.style.background = '#f3f4f6'; statusBox.style.color = '#374151'; }
+                document.getElementById('goalTitle').after(statusBox);
+
+                // Met à jour le lien Modifier pour transmettre l'id
+                const editBtn = document.querySelector('a[href^="capella_edit.html"]');
+                if (editBtn) editBtn.href = `capella_edit.html?id=${encodeURIComponent(goalId)}`;
+
+                // Supprimer l'objectif (bouton rouge)
+                const deleteBtn = document.querySelector('button');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', () => {
+                        if (!confirm('Supprimer cet objectif ? Cette action est irréversible.')) return;
+                        const filtered = goals.filter(g => g.id !== goalId);
+                        saveGoals(filtered);
+                        showToast('Objectif supprimé', 'success');
+                        // Retour au dashboard ou à la liste
+                        setTimeout(() => window.location.href = 'dashboard.html', 600);
+                    });
+                }
+
+                // Export JSON
+                const btnExport = document.getElementById('btnExport');
+                if (btnExport) {
+                    btnExport.addEventListener('click', () => {
+                        const dataStr = JSON.stringify(goal, null, 2);
+                        const blob = new Blob([dataStr], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `${(goal.title||'goal').replace(/\s+/g,'_')}.json`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        showToast('Export JSON téléchargé', 'success');
+                    });
+                }
+
+                // Dupliquer
+                const btnDuplicate = document.getElementById('btnDuplicate');
+                if (btnDuplicate) {
+                    btnDuplicate.addEventListener('click', () => {
+                        const copy = Object.assign({}, goal, { id: 'g_' + Date.now(), title: (goal.title||'Copie') + ' (copie)', createdAt: new Date().toISOString() });
+                        goals.push(copy);
+                        saveGoals(goals);
+                        showToast('Objectif dupliqué', 'success');
+                        setTimeout(() => window.location.href = `capella_view.html?id=${encodeURIComponent(copy.id)}`, 500);
+                    });
+                }
+
+                // Progression: calcul du montant déjà déposé si on considère les jours passés depuis le début
+                const today = new Date();
+                const startDateObj = startDate;
+                const daysPassed = Math.max(0, Math.floor((today - startDateObj) / (1000*60*60*24)));
+                const deposited = Math.min(target, daysPassed * daily);
+                const percent = target > 0 ? Math.round((deposited / target) * 100) : 0;
+
+                document.getElementById('progressBar').style.width = percent + '%';
+                document.getElementById('progressPercent').textContent = percent + '%';
+                document.getElementById('progressSummary').textContent = `${deposited.toLocaleString('fr')}€ déposés · ${daysPassed} jours passés`;
+
+                // Meta dates
+                document.getElementById('metaCreated').textContent = 'Créé: ' + (goal.createdAt ? new Date(goal.createdAt).toLocaleString('fr-FR') : '-');
+                document.getElementById('metaUpdated').textContent = 'Mis à jour: ' + (goal.updatedAt ? new Date(goal.updatedAt).toLocaleString('fr-FR') : '-');
+
+                // Toast helper
+                function showToast(message, type='info'){
+                    const id = 'capella_toast';
+                    let el = document.getElementById(id);
+                    if (!el) {
+                        el = document.createElement('div');
+                        el.id = id;
+                        el.style.position = 'fixed';
+                        el.style.right = '20px';
+                        el.style.bottom = '20px';
+                        el.style.zIndex = 9999;
+                        document.body.appendChild(el);
+                    }
+                    const item = document.createElement('div');
+                    item.textContent = message;
+                    item.style.background = (type==='success')? '#10b981' : '#111827';
+                    item.style.color = 'white';
+                    item.style.padding = '10px 14px';
+                    item.style.marginTop = '8px';
+                    item.style.borderRadius = '8px';
+                    item.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)';
+                    el.appendChild(item);
+                    setTimeout(()=>{ item.style.opacity='0'; setTimeout(()=>item.remove(),300); }, 2200);
+                }
+            }
+        }
+    </script>
+</body>
+</html>

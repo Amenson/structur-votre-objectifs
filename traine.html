@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Capella - Dashboard PRO</title>
+
+<!-- Tailwind (CDN) -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  /* Petite personnalisation */
+  :root {
+    --accent: #0ea5e9;
+    --accent-2: #0284c7;
+  }
+  .glass {
+    backdrop-filter: blur(6px) saturate(120%);
+    background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(255,255,255,0.55));
+  }
+  .dark .glass {
+    background: linear-gradient(180deg, rgba(8,145,178,0.12), rgba(2,6,23,0.28));
+  }
+  .icon-box { width:64px; height:64px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
+  .progress-ring { transform: rotate(-90deg); }
+  .fade-in { animation: fadeIn 300ms ease-out both; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(6px)} to { opacity:1; transform:none } }
+</style>
+</head>
+<body class="antialiased bg-gradient-to-b from-sky-50 to-white dark:from-slate-900 dark:to-slate-800 text-slate-800 dark:text-slate-100">
+
+<!-- Container -->
+<div class="min-h-screen p-6 md:p-10">
+
+  <!-- Header -->
+  <header class="flex items-center justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+        Capella <span class="text-yellow-400">MONEY</span> — Dashboard PRO
+      </h1>
+      <p class="text-sm text-slate-500 dark:text-slate-300">Gère, modifie et analyse tes objectifs d’épargne</p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <input id="search" placeholder="Rechercher un objectif..." class="px-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-sky-200 outline-none" />
+      <button id="btnNew" title="Nouveau" class="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition"><i class="fas fa-plus mr-2"></i>Nouveau</button>
+      <button id="btnExport" title="Exporter JSON" class="px-3 py-2 bg-white/60 border rounded-lg"><i class="fas fa-file-export"></i></button>
+      <label class="px-3 py-2 bg-white/60 border rounded-lg cursor-pointer">
+        <i class="fas fa-file-import"></i>
+        <input id="importFile" type="file" accept=".json" class="hidden" />
+      </label>
+      <button id="themeToggle" title="Basculer thème" class="px-3 py-2 bg-white/60 border rounded-lg"><i class="fas fa-moon"></i></button>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+    <!-- Left: Liste objectifs -->
+    <aside class="lg:col-span-1 space-y-4">
+      <div class="p-4 glass rounded-xl shadow-sm">
+        <h3 class="text-lg font-bold mb-2">Mes objectifs</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-300">Clique sur un objectif pour voir les détails.</p>
+      </div>
+
+      <div id="goalList" class="space-y-3 overflow-auto max-h-[68vh]"></div>
+
+      <div class="p-4 glass rounded-xl shadow-sm flex gap-2">
+        <div class="w-3/4">
+          <p class="text-sm text-slate-500">Progression totale</p>
+          <div class="w-full bg-slate-200 dark:bg-slate-700 h-3 rounded-full mt-2 overflow-hidden">
+            <div id="globalProgress" class="h-3 bg-gradient-to-r from-sky-500 to-indigo-500" style="width:0%"></div>
+          </div>
+        </div>
+        <div class="w-1/4 text-right">
+          <p id="globalPercent" class="text-xl font-bold">0%</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main: Détails & Stats -->
+    <main class="lg:col-span-3 space-y-6">
+
+      <!-- Top cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass p-6 rounded-2xl shadow-md fade-in">
+          <div class="flex items-center gap-4">
+            <div class="icon-box" style="background:linear-gradient(135deg,var(--accent),var(--accent-2));"><i id="viewIcon" class="fas fa-piggy-bank text-white text-2xl"></i></div>
+            <div>
+              <p class="text-sm text-slate-200 dark:text-slate-300">Objectif sélectionné</p>
+              <h3 id="viewTitle" class="text-xl font-extrabold">—</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-6 rounded-2xl shadow-md fade-in">
+          <p class="text-sm text-slate-200">Montant cible</p>
+          <h3 id="viewTarget" class="text-2xl font-extrabold">0 €</h3>
+          <p id="viewSaved" class="text-sm text-slate-500 mt-1">Épargné si commencé aujourd’hui</p>
+        </div>
+
+        <div class="glass p-6 rounded-2xl shadow-md fade-in">
+          <p class="text-sm text-slate-200">Durée estimée</p>
+          <h3 id="viewDays" class="text-2xl font-extrabold">0 jours</h3>
+          <p id="viewEnd" class="text-sm text-slate-500 mt-1">Date prévue</p>
+        </div>
+      </div>
+
+      <!-- Chart + actions -->
+      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 glass p-6 rounded-2xl shadow-md">
+          <div class="flex justify-between items-center mb-4">
+            <h4 class="font-bold">Projection d’épargne</h4>
+            <div class="flex items-center gap-2">
+              <button id="btnEdit" class="px-3 py-2 bg-white rounded-lg hover:bg-white/80"><i class="fas fa-edit"></i> Modifier</button>
+              <button id="btnDelete" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+          <canvas id="savingsChart" height="160"></canvas>
+        </div>
+
+        <!-- Right: progression ring + summary -->
+        <div class="glass p-6 rounded-2xl shadow-md flex flex-col items-center justify-center">
+          <svg width="160" height="160" class="progress-ring" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" stroke="#e6eef7" stroke-width="10" fill="none" />
+            <circle id="progressCircle" cx="50" cy="50" r="40" stroke="#0ea5e9" stroke-width="10" stroke-linecap="round" fill="none" stroke-dasharray="251.2" stroke-dashoffset="251.2"></circle>
+          </svg>
+          <p id="percentText" class="text-2xl font-bold mt-3">0%</p>
+          <p id="smallInfo" class="text-sm text-slate-500 mt-2">Commence vite — chaque petit dépôt compte</p>
+        </div>
+      </section>
+
+      <!-- Activity / history / filters -->
+      <section class="glass p-6 rounded-2xl shadow-md">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="font-bold">Historique & actions</h4>
+          <div class="flex items-center gap-3">
+            <select id="filter" class="px-3 py-2 rounded-lg border">
+              <option value="all">Tous</option>
+              <option value="fast">Moins de 1 an</option>
+              <option value="long">Plus d'1 an</option>
+            </select>
+            <button id="addDeposit" class="px-3 py-2 bg-green-500 text-white rounded-lg"><i class="fas fa-coins"></i> Ajouter dépôt</button>
+          </div>
+        </div>
+
+        <div id="history" class="space-y-3 max-h-44 overflow-auto"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Modals: New/Edit + Confirm + Deposit -->
+<!-- Modal base -->
+<div id="modalBackdrop" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+  <div id="modal" class="bg-white dark:bg-slate-900 rounded-2xl p-6 w-full max-w-2xl mx-4 shadow-lg">
+    <!-- content injected -->
+  </div>
+</div>
+
+<script>
+/* ---------------------------
+   Utilitaires & stockage
+-----------------------------*/
+const LS_KEY = 'capella_goals_v1';
+const icons = { house:'fa-house', car:'fa-car', plane:'fa-plane', heart:'fa-heart', briefcase:'fa-briefcase', 'graduation-cap':'fa-graduation-cap', diamond:'fa-gem', tree:'fa-tree', piggy:'fa-piggy-bank' };
+
+function nowISO() { return new Date().toISOString(); }
+function loadGoals() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { console.error(e); return []; }
+}
+function saveGoals(goals) {
+  localStorage.setItem(LS_KEY, JSON.stringify(goals));
+}
+
+/* ---------------------------
+   Demo initial si vide
+-----------------------------*/
+let goals = loadGoals();
+if (!goals || goals.length === 0) {
+  goals = [
+    { id: cryptoRandomId(), title: "Voyage Japon 2026", icon: "plane", target:8000, daily:5, start: (new Date()).toISOString().slice(0,10), description:"Découverte du Japon", created: nowISO() },
+    { id: cryptoRandomId(), title: "Caisse urgence", icon: "piggy", target:2000, daily:2, start: (new Date()).toISOString().slice(0,10), description:"Fonds sécurité", created: nowISO() }
+  ];
+  saveGoals(goals);
+}
+
+/* ---------------------------
+   Helpers
+-----------------------------*/
+function cryptoRandomId() {
+  // simple id
+  return 'g_' + Math.random().toString(36).slice(2,9);
+}
+function getGoalById(id) { return goals.find(g=>g.id===id); }
+function formatEuro(n){ return Number(n).toLocaleString('fr-FR') + ' €'; }
+
+/* ---------------------------
+   Render liste & selection
+-----------------------------*/
+const goalListEl = document.getElementById('goalList');
+let selectedId = goals[0]?.id || null;
+
+function renderGoalItem(goal) {
+  const div = document.createElement('div');
+  div.className = 'p-3 rounded-lg hover:shadow-md transition flex items-center gap-3 cursor-pointer';
+  div.dataset.id = goal.id;
+  div.innerHTML = `
+    <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#0ea5e9,#7dd3fc)">
+      <i class="fas ${icons[goal.icon]||'fa-piggy-bank'} text-white"></i>
+    </div>
+    <div class="flex-1">
+      <div class="flex justify-between items-center gap-2">
+        <div>
+          <div class="font-semibold">${escapeHtml(goal.title)}</div>
+          <div class="text-xs text-slate-400">${formatEuro(goal.target)} • ${goal.daily}€/j</div>
+        </div>
+        <div class="text-xs text-slate-400">${new Date(goal.created).toLocaleDateString()}</div>
+      </div>
+    </div>
+  `;
+  div.addEventListener('click', ()=>selectGoal(goal.id));
+  return div;
+}
+
+function renderList(filterText = '') {
+  goalListEl.innerHTML = '';
+  const list = (goals.filter(g => g.title.toLowerCase().includes(filterText.toLowerCase())));
+  list.forEach(g => goalListEl.appendChild(renderGoalItem(g)));
+  if (!selectedId && list[0]) selectedId = list[0].id;
+}
+renderList();
+
+/* ---------------------------
+   Selection view update
+-----------------------------*/
+const viewTitle = document.getElementById('viewTitle');
+const viewIcon = document.getElementById('viewIcon');
+const viewTarget = document.getElementById('viewTarget');
+const viewSaved = document.getElementById('viewSaved');
+const viewDays = document.getElementById('viewDays');
+const viewEnd = document.getElementById('viewEnd');
+const percentText = document.getElementById('percentText');
+const progressCircle = document.getElementById('progressCircle');
+const smallInfo = document.getElementById('smallInfo');
+const globalProgressEl = document.getElementById('globalProgress');
+const globalPercentEl = document.getElementById('globalPercent');
+const historyEl = document.getElementById('history');
+
+let chart = null;
+function selectGoal(id) {
+  selectedId = id;
+  const g = getGoalById(id);
+  if (!g) return;
+  // Title / icon
+  viewTitle.textContent = g.title;
+  viewIcon.className = `fas ${icons[g.icon]||'fa-piggy-bank'} text-white text-2xl`;
+  // numbers
+  viewTarget.textContent = formatEuro(g.target);
+  viewSaved.textContent = formatEuro( computeSavedIfStartNow(g) );
+  const days = Math.ceil(g.target / g.daily);
+  viewDays.textContent = days + ' jours';
+  const end = new Date(g.start); end.setDate(end.getDate() + days);
+  viewEnd.textContent = end.toLocaleDateString('fr-FR');
+  // progress
+  const saved = computeSavedIfStartNow(g);
+  const pct = Math.min(100, Math.round((saved / g.target) * 100));
+  percentText.textContent = pct + '%';
+  const circumference = 2*Math.PI*40;
+  const offset = circumference - (pct/100)*circumference;
+  progressCircle.style.strokeDashoffset = offset;
+  // small info
+  smallInfo.textContent = `${g.daily} € par jour • Début: ${new Date(g.start).toLocaleDateString('fr-FR')}`;
+  renderHistory(g);
+  renderChart(g);
+  updateGlobalProgress();
+}
+
+/* ---------------------------
+   Compute helpers
+-----------------------------*/
+function computeSavedIfStartNow(g){
+  // simulate: saved = target (we show target) but also show cumulative after full duration
+  // But to give realistic number we compute min(target, days * daily)
+  const days = Math.ceil(g.target / g.daily);
+  return Math.min(g.target, days * g.daily);
+}
+
+/* ---------------------------
+   Chart
+-----------------------------*/
+function renderChart(g) {
+  const ctx = document.getElementById('savingsChart').getContext('2d');
+  // simulate daily accumulation until target reached
+  const days = Math.ceil(g.target / g.daily);
+  const labels = [];
+  const data = [];
+  let acc = 0;
+  for (let i=0;i<=days;i++){
+    labels.push(i===0 ? 'Aujourd’hui' : `${i}j`);
+    if (i===0) data.push(0);
+    else {
+      acc = Math.min(g.target, acc + g.daily);
+      data.push(acc);
+    }
+  }
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Épargne cumulative', data, fill:true, tension:0.2, borderWidth:2, borderColor:'#0ea5e9', backgroundColor:'rgba(14,165,233,0.12)', pointRadius:2 }]},
+    options: { plugins:{ legend:{ display:false } }, scales:{ y:{ ticks:{ callback: (v)=> formatEuro(v) } } } }
+  });
+}
+
+/* ---------------------------
+   History (simple simulated deposits)
+-----------------------------*/
+function renderHistory(g){
+  historyEl.innerHTML = '';
+  // simulate last 12 deposits
+  const deposits = [];
+  let saved = 0;
+  for (let i=0;i<12;i++){
+    const date = new Date();
+    date.setDate(date.getDate() - (11 - i));
+    const amount = Math.min(g.daily, Math.max(0, g.target - saved));
+    saved += amount;
+    deposits.push({ date: date.toISOString().slice(0,10), amount });
+    if (saved >= g.target) break;
+  }
+  deposits.reverse().forEach(d=>{
+    const el = document.createElement('div');
+    el.className = 'flex items-center justify-between p-3 rounded-md border';
+    el.innerHTML = `<div class="text-sm"><div class="font-medium">${formatEuro(d.amount)}</div><div class="text-xs text-slate-400">${new Date(d.date).toLocaleDateString()}</div></div>
+                    <div class="text-xs text-slate-400">Dépôt automatique</div>`;
+    historyEl.appendChild(el);
+  });
+}
+
+/* ---------------------------
+   Global progress
+-----------------------------*/
+function updateGlobalProgress(){
+  if (!goals.length) { globalProgressEl.style.width='0%'; globalPercentEl.textContent='0%'; return; }
+  const totalTarget = goals.reduce((s,g)=>s+Number(g.target),0);
+  const totalSaved = goals.reduce((s,g)=>s+Number(computeSavedIfStartNow(g)),0);
+  const pct = Math.round((totalSaved / totalTarget) * 100) || 0;
+  globalProgressEl.style.width = pct + '%';
+  globalPercentEl.textContent = pct + '%';
+}
+
+/* ---------------------------
+   CRUD: New / Edit / Delete
+-----------------------------*/
+const modalBackdrop = document.getElementById('modalBackdrop');
+const modal = document.getElementById('modal');
+
+function openModal(contentHtml) {
+  modal.innerHTML = contentHtml;
+  modalBackdrop.classList.remove('hidden');
+  modalBackdrop.style.display = 'flex';
+}
+function closeModal() {
+  modalBackdrop.classList.add('hidden');
+  modalBackdrop.style.display = 'none';
+}
+
+/* New goal */
+document.getElementById('btnNew').addEventListener('click', ()=>{
+  openModal(newGoalHtml());
+  bindNewForm();
+});
+
+function newGoalHtml(){
+  return `
+    <div>
+      <h3 class="text-lg font-bold mb-3">Créer un nouvel objectif</h3>
+      <div class="space-y-3">
+        <input id="n_title" placeholder="Titre" class="w-full p-3 rounded-lg border" />
+        <div class="grid grid-cols-2 gap-3">
+          <input id="n_target" type="number" placeholder="Montant cible (€)" class="p-3 rounded-lg border" />
+          <input id="n_daily" type="number" placeholder="Par jour (€)" class="p-3 rounded-lg border" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <input id="n_start" type="date" class="p-3 rounded-lg border" value="${new Date().toISOString().slice(0,10)}"/>
+          <select id="n_icon" class="p-3 rounded-lg border">
+            <option value="plane">Voyage</option><option value="house">Maison</option><option value="car">Voiture</option><option value="piggy">Épargne</option><option value="diamond">Luxe</option>
+          </select>
+        </div>
+        <textarea id="n_desc" rows="3" placeholder="Description..." class="w-full p-3 rounded-lg border"></textarea>
+        <div class="flex justify-end gap-3 mt-2">
+          <button id="n_cancel" class="px-4 py-2 rounded-lg border">Annuler</button>
+          <button id="n_save" class="px-4 py-2 rounded-lg bg-sky-600 text-white">Créer</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function bindNewForm(){
+  document.getElementById('n_cancel').addEventListener('click', closeModal);
+  document.getElementById('n_save').addEventListener('click', ()=>{
+    const title = document.getElementById('n_title').value.trim();
+    const target = Number(document.getElementById('n_target').value);
+    const daily = Number(document.getElementById('n_daily').value);
+    const start = document.getElementById('n_start').value;
+    const icon = document.getElementById('n_icon').value;
+    const desc = document.getElementById('n_desc').value.trim();
+    if (!title || !target || !daily) return alert('Remplis titre, montant et dépôt quotidien.');
+    const g = { id: cryptoRandomId(), title, target, daily, start, icon, description:desc, created: nowISO() };
+    goals.unshift(g);
+    saveGoals(goals);
+    renderList();
+    selectGoal(g.id);
+    closeModal();
+  });
+}
+
+/* Edit */
+document.getElementById('btnEdit').addEventListener('click', ()=>{
+  const g = getGoalById(selectedId);
+  if (!g) return alert('Choisis un objectif');
+  openModal(editHtml(g));
+  bindEditForm(g);
+});
+function editHtml(g){
+  return `
+    <div>
+      <h3 class="text-lg font-bold mb-3">Modifier l’objectif</h3>
+      <div class="space-y-3">
+        <input id="e_title" value="${escapeAttr(g.title)}" class="w-full p-3 rounded-lg border" />
+        <div class="grid grid-cols-2 gap-3">
+          <input id="e_target" type="number" value="${g.target}" class="p-3 rounded-lg border" />
+          <input id="e_daily" type="number" value="${g.daily}" class="p-3 rounded-lg border" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <input id="e_start" type="date" value="${g.start}" class="p-3 rounded-lg border" />
+          <select id="e_icon" class="p-3 rounded-lg border">
+            <option ${g.icon==='plane'?'selected':''} value="plane">Voyage</option>
+            <option ${g.icon==='house'?'selected':''} value="house">Maison</option>
+            <option ${g.icon==='car'?'selected':''} value="car">Voiture</option>
+            <option ${g.icon==='piggy'?'selected':''} value="piggy">Épargne</option>
+            <option ${g.icon==='diamond'?'selected':''} value="diamond">Luxe</option>
+          </select>
+        </div>
+        <textarea id="e_desc" rows="3" class="w-full p-3 rounded-lg border">${escapeAttr(g.description||'')}</textarea>
+        <div class="flex justify-between mt-2">
+          <button id="e_cancel" class="px-4 py-2 rounded-lg border">Annuler</button>
+          <div class="flex gap-2">
+            <button id="e_delete" class="px-4 py-2 rounded-lg bg-red-500 text-white">Supprimer</button>
+            <button id="e_save" class="px-4 py-2 rounded-lg bg-sky-600 text-white">Sauvegarder</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function bindEditForm(g){
+  document.getElementById('e_cancel').addEventListener('click', closeModal);
+  document.getElementById('e_save').addEventListener('click', ()=>{
+    const title = document.getElementById('e_title').value.trim();
+    const target = Number(document.getElementById('e_target').value);
+    const daily = Number(document.getElementById('e_daily').value);
+    const start = document.getElementById('e_start').value;
+    const icon = document.getElementById('e_icon').value;
+    const desc = document.getElementById('e_desc').value.trim();
+    if (!title || !target || !daily) return alert('Remplis titre, montant et dépôt quotidien.');
+    Object.assign(g, { title, target, daily, start, icon, description:desc });
+    saveGoals(goals);
+    renderList();
+    selectGoal(g.id);
+    closeModal();
+  });
+  document.getElementById('e_delete').addEventListener('click', ()=>{
+    if (!confirm('Supprimer cet objectif ? Cette action est irréversible.')) return;
+    goals = goals.filter(x=>x.id!==g.id);
+    saveGoals(goals);
+    renderList();
+    selectedId = goals[0]?.id || null;
+    selectGoal(selectedId);
+    closeModal();
+  });
+}
+
+/* Delete button from view */
+document.getElementById('btnDelete').addEventListener('click', ()=>{
+  const g = getGoalById(selectedId);
+  if (!g) return alert('Choisis un objectif');
+  if (!confirm(`Supprimer "${g.title}" ?`)) return;
+  goals = goals.filter(x=>x.id!==g.id);
+  saveGoals(goals);
+  renderList();
+  selectedId = goals[0]?.id || null;
+  selectGoal(selectedId);
+});
+
+/* Deposit quick add (simulate deposit increases daily saved value) */
+document.getElementById('addDeposit').addEventListener('click', ()=>{
+  const g = getGoalById(selectedId);
+  if (!g) return alert('Choisis un objectif');
+  openModal(depositHtml(g));
+  bindDepositForm(g);
+});
+function depositHtml(g){
+  return `
+    <div>
+      <h3 class="text-lg font-bold mb-3">Ajouter un dépôt à "${escapeAttr(g.title)}"</h3>
+      <div class="space-y-3">
+        <input id="d_amount" type="number" placeholder="Montant (€)" class="w-full p-3 rounded-lg border" />
+        <div class="flex justify-end gap-3">
+          <button id="d_cancel" class="px-4 py-2 rounded-lg border">Annuler</button>
+          <button id="d_save" class="px-4 py-2 rounded-lg bg-green-600 text-white">Ajouter</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+function bindDepositForm(g){
+  document.getElementById('d_cancel').addEventListener('click', closeModal);
+  document.getElementById('d_save').addEventListener('click', ()=>{
+    const a = Number(document.getElementById('d_amount').value);
+    if (!a || a <= 0) return alert('Montant invalide');
+    // For demo, we increase target backward: we simulate as if deposit reduces remaining target by amount by increasing daily to keep logic simple.
+    // Real app: store transactions; here we just show an alert and pretend.
+    alert(`Dépôt de ${formatEuro(a)} enregistré (simulation).`);
+    closeModal();
+  });
+}
+
+/* ---------------------------
+   Search & filters
+-----------------------------*/
+document.getElementById('search').addEventListener('input', (e)=>{
+  renderList(e.target.value);
+});
+
+/* ---------------------------
+   Export / Import
+-----------------------------*/
+document.getElementById('btnExport').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(goals, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'capella_goals_export.json';
+  document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const imported = JSON.parse(reader.result);
+      if (!Array.isArray(imported)) throw new Error('Format non valide');
+      // merge (keep ids unique)
+      imported.forEach(x=>{
+        if (!x.id) x.id = cryptoRandomId();
+        goals.push(x);
+      });
+      saveGoals(goals);
+      renderList();
+      alert('Import réussi');
+    } catch(err) { alert('Erreur import: ' + err.message); }
+  };
+  reader.readAsText(f);
+});
+
+/* ---------------------------
+   Theme toggle
+-----------------------------*/
+const themeToggle = document.getElementById('themeToggle');
+const rootHtml = document.documentElement;
+themeToggle.addEventListener('click', ()=>{
+  rootHtml.classList.toggle('dark');
+  // swap icon
+  themeToggle.innerHTML = rootHtml.classList.contains('dark') ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+});
+
+/* ---------------------------
+   Small util: escape
+-----------------------------*/
+function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+function escapeAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+
+/* ---------------------------
+   Init
+-----------------------------*/
+renderList();
+selectGoal(selectedId);
+
+/* Update list when modal closed (to reflect changes) */
+modalBackdrop.addEventListener('click', (e)=>{
+  if (e.target===modalBackdrop) closeModal();
+});
+
+</script>
+</body>
+</html>

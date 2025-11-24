@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modifier l’objectif – Capella MONEY</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg,#f0f9ff,#e0f2fe); }
+        .form-container { background:white; box-shadow:0 20px 40px rgba(14,165,233,0.15); }
+        .btn-primary { background:linear-gradient(135deg,#0ea5e9,#0284c7); }
+        .btn-primary:hover { background:linear-gradient(135deg,#0369a1,#0284c7); }
+        .icon-preview { width:60px;height:60px;border-radius:16px;
+            background:linear-gradient(135deg,#0ea5e9,#7dd3fc);display:flex;
+            justify-content:center;align-items:center;box-shadow:0 10px 20px rgba(14,165,233,.3); }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <div class="ml-58 p-7 max-w-4xl mx-auto">
+
+        <a href="capella_view.html" class="inline-flex items-center text-sky-700 font-bold mb-8 hover:underline">
+            <i class="fas fa-arrow-left mr-2"></i> Retour à l’objectif
+        </a>
+
+        <h1 class="text-4xl font-black bg-gradient-to-r from-sky-600 to-blue-700 bg-clip-text text-transparent mb-10">
+            Modifier ton objectif d’épargne
+        </h1>
+
+        <form id="editForm" class="form-container p-8 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="md:col-span-2">
+                <!-- Titre -->
+                <label class="block text-lg font-bold mb-2">Nom de l’objectif</label>
+                <input id="title" class="w-full px-5 py-4 rounded-xl border-2 mb-2" type="text">
+                <p id="errTitle" class="text-red-500 text-sm mb-3 hidden">Le titre est requis.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Montant -->
+                    <div>
+                        <label class="block text-lg font-bold mb-2">Montant cible (€)</label>
+                        <input id="target" class="w-full px-5 py-4 rounded-xl border-2 mb-2" type="number">
+                        <p id="errTarget" class="text-red-500 text-sm mb-3 hidden">Montant cible invalide.</p>
+                    </div>
+
+                    <!-- Daily -->
+                    <div>
+                        <label class="block text-lg font-bold mb-2">Montant quotidien (€)</label>
+                        <input id="daily" class="w-full px-5 py-4 rounded-xl border-2 mb-2" type="number">
+                        <p id="errDaily" class="text-red-500 text-sm mb-3 hidden">Montant quotidien invalide.</p>
+                    </div>
+                </div>
+
+                <!-- Icône -->
+                <label class="block text-lg font-bold mb-2">Icône</label>
+                <div class="flex items-center gap-4 mb-6">
+                    <select id="icon" class="w-full px-4 py-3 rounded-xl border-2">
+                        <option value="house">Maison</option>
+                        <option value="car">Voiture</option>
+                        <option value="plane">Voyage</option>
+                        <option value="heart">Santé</option>
+                        <option value="briefcase">Business</option>
+                        <option value="graduation-cap">Études</option>
+                        <option value="diamond">Luxe</option>
+                        <option value="tree">Écologie</option>
+                    </select>
+                    <div class="icon-preview">
+                        <i id="iconPreview" class="fas fa-plane text-3xl text-white"></i>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <label class="block text-lg font-bold mb-2">Description</label>
+                <textarea id="description" rows="4" class="w-full px-5 py-4 rounded-xl border-2 mb-4"></textarea>
+
+                <!-- Deadline & Priority -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Date limite</label>
+                        <input type="date" id="deadline" class="w-full px-3 py-2 rounded border-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold mb-1">Priorité</label>
+                        <select id="priority" class="w-full px-3 py-2 rounded border-2">
+                            <option value="low">Faible</option>
+                            <option value="medium">Moyenne</option>
+                            <option value="high">Haute</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-semibold mb-1">Importance</label>
+                    <input type="range" id="importance" min="1" max="5" value="3" class="w-full">
+                </div>
+
+                <div class="flex justify-end mt-6 gap-6">
+                    <a id="cancelLink" href="#" class="px-6 py-3 bg-gray-200 rounded-xl font-bold">Annuler</a>
+                    <button type="submit" class="btn-primary px-6 py-3 rounded-xl text-white font-bold">
+                        Mettre à jour
+                    </button>
+                </div>
+            </div>
+
+            <!-- Aperçu live -->
+            <div class="p-4 bg-sky-50 rounded-xl">
+                <h3 class="text-lg font-bold mb-4">Aperçu</h3>
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="w-16 h-16 rounded-lg bg-gradient-to-r from-sky-500 to-blue-400 flex items-center justify-center text-white text-2xl" id="previewIcon"><i class="fas fa-plane"></i></div>
+                    <div>
+                        <div id="previewTitle" class="font-bold text-lg">Titre objectif</div>
+                        <div id="previewDesc" class="text-sm text-gray-600">Description courte</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-3">
+                    <div class="flex justify-between text-sm text-gray-700"><span>Montant cible</span><span id="previewTarget">0€</span></div>
+                    <div class="flex justify-between text-sm text-gray-700"><span>Par jour</span><span id="previewDaily">0€</span></div>
+                    <div class="flex justify-between text-sm text-gray-700"><span>Est. durée</span><span id="previewDays">- jours</span></div>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+    <script>
+        // --- Utilise localStorage pour charger / enregistrer l'objectif ---
+        const STORAGE_KEY = 'capella_goals';
+
+        const icons = { house:'fa-house', car:'fa-car', plane:'fa-plane', heart:'fa-heart', briefcase:'fa-briefcase','graduation-cap':'fa-graduation-cap', diamond:'fa-gem', tree:'fa-tree' };
+
+        function getGoals() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e){ return []; } }
+        function saveGoals(list) { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+        // Récupère paramètre id dans l'URL
+        function getParam(name) {
+            const url = new URL(window.location.href);
+            return url.searchParams.get(name);
+        }
+
+        const goalId = getParam('id');
+
+        if (!goalId) {
+            alert('Aucun identifiant d\'objectif fourni.');
+            // Rediriger vers création
+            window.location.href = 'capella_create.html';
+        }
+
+        const goals = getGoals();
+        const goal = goals.find(g => g.id === goalId);
+
+        if (!goal) {
+            alert('Objectif introuvable.');
+            window.location.href = 'capella_create.html';
+        }
+
+        // Préremplir le formulaire
+        document.getElementById('title').value = goal.title || '';
+        document.getElementById('target').value = goal.target || '';
+        document.getElementById('daily').value = goal.daily || '';
+        document.getElementById('description').value = goal.description || '';
+        document.getElementById('icon').value = goal.icon || Object.keys(icons)[0];
+        document.getElementById('iconPreview').className = `fas ${icons[document.getElementById('icon').value]} text-3xl text-white`;
+        document.getElementById('deadline').value = goal.deadline || '';
+        document.getElementById('priority').value = goal.priority || 'medium';
+        document.getElementById('importance').value = goal.importance || 3;
+
+        // Met à jour le lien Annuler/Retour vers la vue courante
+        const backLink = document.querySelector('a[href^="goal-view.html"], a[href^="capella_view.html"], a[href^="capella_view.html"]');
+        if (backLink) backLink.href = `capella_view.html?id=${encodeURIComponent(goalId)}`;
+
+        // Update icon preview quand l'utilisateur change la sélection
+        document.getElementById('icon').addEventListener('change', function() {
+            document.getElementById('iconPreview').className = `fas ${icons[this.value]} text-3xl text-white`;
+            document.getElementById('previewIcon').innerHTML = `<i class="fas ${icons[this.value]}"></i>`;
+        });
+
+        // Live preview updates for title/desc/amounts
+        function updatePreview() {
+            const title = document.getElementById('title').value.trim() || 'Titre objectif';
+            const desc = document.getElementById('description').value.trim() || 'Description courte';
+            const target = Number(document.getElementById('target').value) || 0;
+            const daily = Number(document.getElementById('daily').value) || 0;
+            const days = daily > 0 ? Math.ceil(target/daily) : '-';
+            const deadlineVal = document.getElementById('deadline').value;
+            const priorityVal = document.getElementById('priority').value;
+            const importanceVal = document.getElementById('importance').value;
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewDesc').textContent = desc;
+            document.getElementById('previewTarget').textContent = target.toLocaleString('fr') + '€';
+            document.getElementById('previewDaily').textContent = (daily? daily + '€' : '0€');
+            document.getElementById('previewDays').textContent = (days==='-'? '-' : days + ' jours');
+            document.getElementById('previewIcon').style.background = (priorityVal==='high')? 'linear-gradient(90deg,#ff7a7a,#ffb4a2)' : (priorityVal==='medium')? 'linear-gradient(90deg,#60a5fa,#3b82f6)' : 'linear-gradient(90deg,#9ae6b4,#34d399)';
+            // deadline preview
+            document.getElementById('previewDesc').textContent += (deadlineVal? '\nDeadline: ' + new Date(deadlineVal).toLocaleDateString('fr-FR') : '');
+            // importance display as stars
+            const stars = '★'.repeat(Math.max(1, Math.min(5, parseInt(importanceVal || 3)))) + '☆'.repeat(5 - Math.max(1, Math.min(5, parseInt(importanceVal || 3))));
+            if (!document.getElementById('previewStars')) {
+                const s = document.createElement('div'); s.id='previewStars'; s.className='text-sm text-yellow-600 mt-2'; document.getElementById('previewIcon').after(s);
+            }
+            document.getElementById('previewStars').textContent = 'Importance: ' + stars;
+        }
+
+        ['title','description','target','daily'].forEach(id => document.getElementById(id).addEventListener('input', updatePreview));
+        updatePreview();
+
+        // Submit: met à jour l'objectif dans localStorage avec validation inline et toast
+        document.getElementById('editForm').addEventListener('submit', e => {
+            e.preventDefault();
+
+            // Clear errors
+            document.getElementById('errTitle').classList.add('hidden');
+            document.getElementById('errTarget').classList.add('hidden');
+            document.getElementById('errDaily').classList.add('hidden');
+
+            const newTitle = document.getElementById('title').value.trim();
+            const newTarget = parseFloat(document.getElementById('target').value) || 0;
+            const newDaily = parseFloat(document.getElementById('daily').value) || 0;
+
+            let hasError = false;
+            if (!newTitle) { document.getElementById('errTitle').classList.remove('hidden'); hasError = true; }
+            if (newTarget <= 0) { document.getElementById('errTarget').classList.remove('hidden'); hasError = true; }
+            if (newDaily <= 0) { document.getElementById('errDaily').classList.remove('hidden'); hasError = true; }
+            if (hasError) return;
+
+            // Update goal and persist
+            goal.title = newTitle;
+            goal.target = newTarget;
+            goal.daily = newDaily;
+            goal.description = document.getElementById('description').value.trim();
+            goal.icon = document.getElementById('icon').value;
+            goal.updatedAt = new Date().toISOString();
+
+            saveGoals(goals);
+            showToast('Objectif mis à jour', 'success');
+            setTimeout(()=> window.location.href = `capella_view.html?id=${encodeURIComponent(goalId)}`, 700);
+        });
+
+        // Simple toast helper reused from view
+        function showToast(message, type='info'){
+            const id = 'capella_toast_edit';
+            let el = document.getElementById(id);
+            if (!el) {
+                el = document.createElement('div');
+                el.id = id;
+                el.style.position = 'fixed';
+                el.style.right = '20px';
+                el.style.bottom = '20px';
+                el.style.zIndex = 9999;
+                document.body.appendChild(el);
+            }
+            const item = document.createElement('div');
+            item.textContent = message;
+            item.style.background = (type==='success')? '#10b981' : '#111827';
+            item.style.color = 'white';
+            item.style.padding = '10px 14px';
+            item.style.marginTop = '8px';
+            item.style.borderRadius = '8px';
+            item.style.boxShadow = '0 6px 18px rgba(0,0,0,0.12)';
+            el.appendChild(item);
+            setTimeout(()=>{ item.style.opacity='0'; setTimeout(()=>item.remove(),300); }, 2200);
+        }
+    </script>
+
+</body>
+</html>

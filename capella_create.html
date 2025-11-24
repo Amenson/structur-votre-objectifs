@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvel Objectif Épargne - Capella MONEY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); }
+        .form-container { background: white; box-shadow: 0 20px 40px rgba(14, 165, 233, 0.15); }
+        .btn-primary { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .btn-primary:hover { background: linear-gradient(135deg, #0284c7, #0369a1); transform: translateY(-2px); }
+        .money-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+        .icon-preview { width: 60px; height: 60px; background: linear-gradient(135deg, #0ea5e9, #7dd3fc); border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3); }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Sidebar placeholder -->
+    <div class="ml-50 p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-10">
+                <h1 class="text-5xl font-black bg-gradient-to-r from-sky-600 to-blue-700 bg-clip-text text-transparent mb-4">
+                    Capella <span class="text-yellow-500">Create</span>
+                </h1>
+                <p class="text-xl text-gray-600">Dépose un peu chaque jour. Deviens riche demain.</p>
+            </div>
+
+            <h2 class="text-4xl font-bold mb-8 flex items-center gap-4 text-gray-800">
+                <i class="fas fa-piggy-bank text-sky-600 text-5xl"></i>
+                Créer un nouvel objectif d’épargne
+            </h2>
+
+            <form id="moneyForm" class="form-container p-10 rounded-3xl border border-sky-200">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                    <!-- Titre de l’objectif -->
+                    <div class="md:col-span-2">
+                        <label class="block text-lg font-bold text-gray-700 mb-3">
+                            Nom de ton objectif <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" id="title" required maxlength="100"
+                               class="w-full px-5 py-4 text-lg rounded-xl border-2 border-gray-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100 outline-none transition"
+                               placeholder="Ex: Achat maison 2030, Liberté financière, Voyage tour du monde">
+                    </div>
+
+                    <!-- Montant cible -->
+                    <div>
+                        <label class="block text-lg font-bold text-gray-700 mb-3">
+                            Montant cible <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-4 text-2xl text-gray-500">€</span>
+                            <input type="number" id="target" required min="100" step="10"
+                                   class="money-input w-full pl-12 pr-5 py-4 text-2xl font-bold rounded-xl border-2 border-gray-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100 outline-none"
+                                   placeholder="50000">
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">L’objectif final en euros</p>
+                    </div>
+
+                    <!-- Contribution quotidienne -->
+                    <div>
+                        <label class="block text-lg font-bold text-gray-700 mb-3">
+                            Je dépose chaque jour
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-4 text-2xl text-gray-500">€</span>
+                            <input type="number" id="daily" value="1" min="0.5" step="0.5"
+                                   class="money-input w-full pl-12 pr-5 py-4 text-2xl font-bold rounded-xl border-2 border-gray-300 focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none"
+                                   placeholder="1">
+                        </div>
+                        <p class="text-sm text-green-600 font-semibold mt-2">
+                            <span id="yearsEstimate">365 jours</span> pour atteindre ton objectif
+                        </p>
+                    </div>
+
+                    <!-- Icône personnalisée -->
+                    <div>
+                        <label class="block text-lg font-bold text-gray-700 mb-3">Icône</label>
+                        <div class="flex items-center gap-4">
+                            <select id="icon" class="w-full px-5 py-4 rounded-xl border-2 border-gray-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100 outline-none text-lg">
+                                <option value="house">Maison</option>
+                                <option value="car">Voiture</option>
+                                <option value="plane">Voyage</option>
+                                <option value="heart">Santé</option>
+                                <option value="briefcase">Business</option>
+                                <option value="graduation-cap">Études</option>
+                                <option value="diamond">Luxe</option>
+                                <option value="tree">Écologie</option>
+                            </select>
+                            <div class="icon-preview">
+                                <i id="iconPreview" class="fas fa-house text-3xl text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date de début -->
+                    <div>
+                        <label class="block text-lg font-bold text-gray-700 mb-3">Date de début</label>
+                        <input type="date" id="startDate"
+                               class="w-full px-5 py-4 rounded-xl border-2 border-gray-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100 outline-none text-lg">
+                    </div>
+
+                    <!-- Deadline (date limite) -->
+                    <div>
+                        <label class="block text-lg font-bold text-gray-700 mb-3">Date limite (deadline)</label>
+                        <input type="date" id="deadline" class="w-full px-5 py-4 rounded-xl border-2 border-gray-300 focus:border-red-500 focus:ring-4 focus:ring-red-100 outline-none text-lg">
+                        <p class="text-sm text-gray-500 mt-2">Date limite souhaitée pour atteindre l’objectif</p>
+                    </div>
+
+                    <!-- Priorité et importance -->
+                    <div>
+                        <label class="block text-lg font-bold text-gray-700 mb-3">Priorité</label>
+                        <select id="priority" class="w-full px-5 py-4 rounded-xl border-2 border-gray-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100 outline-none text-lg">
+                            <option value="low">Faible</option>
+                            <option value="medium" selected>Moyenne</option>
+                            <option value="high">Haute</option>
+                        </select>
+                        <p class="text-sm text-gray-500 mt-2">Priorité par rapport à tes autres objectifs</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-lg font-bold text-gray-700 mb-3">Importance (1-5)</label>
+                        <input type="range" id="importance" min="1" max="5" value="3" class="w-full">
+                        <p class="text-sm text-gray-500 mt-2">Glisse pour indiquer l'importance</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="md:col-span-2">
+                        <label class="block text-lg font-bold text-gray-700 mb-3">Pourquoi cet objectif ?</label>
+                        <textarea id="description" rows="4" maxlength="500"
+                                  class="w-full px-5 py-4 rounded-xl border-2 border-gray-300 focus:border-sky-500 focus:ring-4 focus:ring-sky-100 outline-none resize-none"
+                                  placeholder="Ex: Je veux être libre financièrement avant 35 ans, offrir une belle vie à ma famille..."></textarea>
+                        <p class="text-xs text-gray-500 text-right"><span id="descCount">0</span>/500</p>
+                    </div>
+                </div>
+
+                <!-- Résumé intelligent -->
+                <div class="mt-10 p-8 bg-gradient-to-r from-sky-50 to-blue-50 rounded-2xl border-2 border-sky-200">
+                    <h3 class="text-2xl font-bold text-sky-800 mb-4 flex items-center gap-3">
+                        <i class="fas fa-brain"></i> Capella  te dit :
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <p class="text-4xl font-black text-sky-600" id="totalDays">-</p>
+                            <p class="text-gray-600">jours nécessaires</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <p class="text-4xl font-black text-green-600" id="endDate">-</p>
+                            <p class="text-gray-600">date d’atteinte prévue</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-xl shadow-lg">
+                            <p class="text-4xl font-black text-yellow-600" id="totalSaved">0€</p>
+                            <p class="text-gray-600">épargnés si tu commences aujourd’hui</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Boutons -->
+                <div class="mt-10 flex flex-col sm:flex-row gap-6 justify-end">
+                    <a href="dashboard.html" class="px-10 py-4 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 font-bold text-lg text-center transition">
+                        Annuler
+                    </a>
+                    <button type="submit" class="btn-primary px-10 py-4 text-white rounded-xl font-bold text-lg flex items-center justify-center gap-3 shadow-xl">
+                        <i class="fas fa-rocket"></i>
+                        Lancer mon épargne maintenant !
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const icons = {
+            'house': 'fa-house', 'car': 'fa-car', 'plane': 'fa-plane', 'heart': 'fa-heart',
+            'briefcase': 'fa-briefcase', 'graduation-cap': 'fa-graduation-cap',
+            'diamond': 'fa-gem', 'tree': 'fa-tree'
+        };
+
+        document.getElementById('icon').addEventListener('change', function() {
+            document.getElementById('iconPreview').className = `fas ${icons[this.value]} text-3xl text-white`;
+        });
+
+        // Calcul en temps réel
+        const updateEstimate = () => {
+            const target = parseFloat(document.getElementById('target').value) || 0;
+            const daily = parseFloat(document.getElementById('daily').value) || 1;
+            const start = new Date(document.getElementById('startDate').value);
+            
+            if (target && daily > 0) {
+                const days = Math.ceil(target / daily);
+                const end = new Date(start);
+                end.setDate(start.getDate() + days);
+
+                document.getElementById('totalDays').textContent = days;
+                document.getElementById('yearsEstimate').textContent = days <= 365 ? `${days} jours` : `${(days/365).toFixed(1)} ans`;
+                document.getElementById('endDate').textContent = end.toLocaleDateString('fr-FR');
+                document.getElementById('totalSaved').textContent = target.toLocaleString('fr') + '€';
+            }
+        };
+
+        ['target', 'daily', 'startDate'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateEstimate);
+        });
+
+        // Compteur description
+        document.getElementById('description').addEventListener('input', function() {
+            document.getElementById('descCount').textContent = this.value.length;
+        });
+
+        // --- localStorage helpers and form submit handling ---
+        const STORAGE_KEY = 'capella_goals';
+
+        function getGoals() {
+            try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch(e) { return []; }
+        }
+
+        function saveGoals(list) { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+        function saveNewGoal(goal) {
+            const list = getGoals();
+            list.push(goal);
+            saveGoals(list);
+        }
+
+        // Set default start date to today
+        (function setDefaultDate() {
+            const d = new Date();
+            const iso = d.toISOString().slice(0,10);
+            document.getElementById('startDate').value = iso;
+            // Default deadline: 1 year from today
+            const nextYear = new Date(d);
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            document.getElementById('deadline').value = nextYear.toISOString().slice(0,10);
+        })();
+
+        // Form submit: build object, save to localStorage and redirect to view
+        document.getElementById('moneyForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const goal = {
+                id: 'g_' + Date.now(),
+                title: document.getElementById('title').value.trim(),
+                target: parseFloat(document.getElementById('target').value) || 0,
+                daily: parseFloat(document.getElementById('daily').value) || 0,
+                icon: document.getElementById('icon').value,
+                start: document.getElementById('startDate').value,
+                deadline: document.getElementById('deadline').value || null,
+                priority: document.getElementById('priority').value || 'medium',
+                importance: parseInt(document.getElementById('importance').value, 10) || 3,
+                description: document.getElementById('description').value.trim(),
+                createdAt: new Date().toISOString()
+            };
+
+            if (!goal.title || goal.target <= 0 || goal.daily <= 0) {
+                alert('Merci de renseigner un titre, un montant cible et un montant quotidien valides.');
+                return;
+            }
+
+            saveNewGoal(goal);
+
+            // Redirige vers la page de visualisation de l'objectif créé
+            window.location.href = `capella_view.html?id=${encodeURIComponent(goal.id)}`;
+        });
+
+        // Init
+        updateEstimate();
+    </script>
+</body>
+</html>

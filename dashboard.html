@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Objectifs - Capella</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style> body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;} .goal-card{border-radius:14px;box-shadow:0 6px 20px rgba(2,6,23,0.06);} </style>
+</head>
+<body class="min-h-screen bg-gradient-to-tr from-sky-50 to-blue-50 p-6">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-sky-700">Mes objectifs</h1>
+            <div class="flex items-center gap-3">
+                <a href="capella_create.html" class="px-4 py-2 bg-sky-600 text-white rounded-lg shadow">Créer</a>
+                <button id="btnExportAll" class="px-4 py-2 bg-gray-100 rounded-lg">Exporter tout</button>
+                <label class="px-4 py-2 bg-gray-100 rounded-lg cursor-pointer">
+                    Importer
+                    <input id="importFile" type="file" accept="application/json" class="hidden">
+                </label>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="md:col-span-2 flex gap-3">
+                <input id="search" placeholder="Rechercher par titre..." class="flex-1 px-4 py-3 rounded-lg border" />
+                <select id="filterPriority" class="px-4 py-3 rounded-lg border">
+                    <option value="all">Toutes priorités</option>
+                    <option value="high">Haute</option>
+                    <option value="medium">Moyenne</option>
+                    <option value="low">Faible</option>
+                </select>
+                <select id="sortBy" class="px-4 py-3 rounded-lg border">
+                    <option value="created_desc">Nouveaux d'abord</option>
+                    <option value="created_asc">Anciens d'abord</option>
+                    <option value="deadline_asc">Deadline proche</option>
+                </select>
+            </div>
+            <div class="flex items-center justify-end gap-3">
+                <div class="text-sm text-gray-600">Total objectifs: <span id="countTotal">0</span></div>
+            </div>
+        </div>
+
+        <div id="list" class="grid grid-cols-1 gap-4"></div>
+
+        <div id="empty" class="text-center text-gray-500 mt-10 hidden">Aucun objectif trouvé. Créez-en un nouveau.</div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'capella_goals';
+        function getGoals(){ try{return JSON.parse(localStorage.getItem(STORAGE_KEY))||[] }catch(e){return[]}};
+        function saveGoals(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+        const iconMap = { house:'fa-house', car:'fa-car', plane:'fa-plane', heart:'fa-heart', briefcase:'fa-briefcase', 'graduation-cap':'fa-graduation-cap', diamond:'fa-gem', tree:'fa-tree' };
+
+        const listEl = document.getElementById('list');
+        const searchEl = document.getElementById('search');
+        const filterEl = document.getElementById('filterPriority');
+        const sortEl = document.getElementById('sortBy');
+        const countTotal = document.getElementById('countTotal');
+        const emptyEl = document.getElementById('empty');
+
+        function formatCurrency(n){ return Number(n||0).toLocaleString('fr') + '€'; }
+
+        function render(){
+            const all = getGoals();
+            let items = all.slice();
+            const q = searchEl.value.trim().toLowerCase();
+            const filter = filterEl.value;
+            if (q) items = items.filter(g=> (g.title||'').toLowerCase().includes(q));
+            if (filter !== 'all') items = items.filter(g=> g.priority === filter);
+
+            // sort
+            if (sortEl.value === 'created_desc') items.sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+            else if (sortEl.value === 'created_asc') items.sort((a,b)=> (a.createdAt||'').localeCompare(b.createdAt||''));
+            else if (sortEl.value === 'deadline_asc') items.sort((a,b)=> (a.deadline||'9999-12-31').localeCompare(b.deadline||'9999-12-31'));
+
+            listEl.innerHTML = '';
+            if (items.length===0){ emptyEl.classList.remove('hidden'); } else { emptyEl.classList.add('hidden'); }
+            countTotal.textContent = items.length;
+
+            items.forEach(goal => {
+                const card = document.createElement('div');
+                card.className = 'goal-card bg-white p-4 flex items-start justify-between';
+
+                const left = document.createElement('div'); left.className='flex items-start gap-4';
+                const iconWrap = document.createElement('div'); iconWrap.className='w-14 h-14 rounded-lg flex items-center justify-center text-white text-xl';
+                const priority = goal.priority || 'medium';
+                iconWrap.style.background = priority==='high'? 'linear-gradient(90deg,#ff7a7a,#ffb4a2)' : (priority==='medium'? 'linear-gradient(90deg,#60a5fa,#3b82f6)' : 'linear-gradient(90deg,#9ae6b4,#34d399)');
+                iconWrap.innerHTML = `<i class="fas ${iconMap[goal.icon]||'fa-house'}"></i>`;
+
+                const info = document.createElement('div'); info.className='';
+                const title = document.createElement('div'); title.className='font-bold text-lg'; title.textContent = goal.title || '—';
+                const meta = document.createElement('div'); meta.className='text-sm text-gray-600';
+                meta.innerHTML = `${formatCurrency(goal.target)} · ${goal.daily||0}€/jour` + (goal.deadline? ' · deadline: '+ new Date(goal.deadline).toLocaleDateString('fr-FR') : '');
+                info.appendChild(title); info.appendChild(meta);
+                left.appendChild(iconWrap); left.appendChild(info);
+
+                // right actions
+                const right = document.createElement('div'); right.className='flex flex-col items-end gap-2';
+                // small progress
+                const progressWrap = document.createElement('div'); progressWrap.className='w-48';
+                const progressBar = document.createElement('div'); progressBar.className='w-full bg-gray-100 rounded-full h-3 overflow-hidden';
+                const inner = document.createElement('div'); inner.className='h-3 bg-gradient-to-r from-green-400 to-yellow-400';
+                // compute percent
+                const target = Number(goal.target)||0; const daily = Number(goal.daily)||0; const start = goal.start? new Date(goal.start): new Date();
+                const daysPassed = Math.max(0, Math.floor((new Date() - start)/(1000*60*60*24)));
+                const deposited = Math.min(target, daysPassed * daily); const percent = target>0? Math.round((deposited/target)*100):0;
+                inner.style.width = percent + '%'; progressBar.appendChild(inner); progressWrap.appendChild(progressBar);
+
+                const badges = document.createElement('div'); badges.className='text-sm text-gray-600'; badges.textContent = 'Importance: ' + (goal.importance||3);
+
+                const actions = document.createElement('div'); actions.className='flex gap-2 mt-2';
+                const viewBtn = createBtn('Voir','bg-sky-600 text-white', ()=> window.location.href = `capella_view.html?id=${encodeURIComponent(goal.id)}`);
+                const editBtn = createBtn('Éditer','bg-gray-100', ()=> window.location.href = `capella_edit.html?id=${encodeURIComponent(goal.id)}`);
+                const dupBtn = createBtn('Dupliquer','bg-yellow-100', ()=> { duplicate(goal.id); });
+                const delBtn = createBtn('Suppr','bg-red-500 text-white', ()=> { remove(goal.id); });
+                actions.appendChild(viewBtn); actions.appendChild(editBtn); actions.appendChild(dupBtn); actions.appendChild(delBtn);
+
+                right.appendChild(progressWrap); right.appendChild(badges); right.appendChild(actions);
+
+                card.appendChild(left); card.appendChild(right);
+                listEl.appendChild(card);
+            });
+        }
+
+        function createBtn(text, cls, onClick){ const b=document.createElement('button'); b.className = 'px-3 py-1 rounded '+cls; b.textContent=text; b.addEventListener('click', onClick); return b; }
+
+        function remove(id){ if(!confirm('Supprimer cet objectif ?')) return; const all = getGoals().filter(g=>g.id!==id); saveGoals(all); render(); }
+        function duplicate(id){ const all = getGoals(); const g = all.find(x=>x.id===id); if(!g) return; const copy = Object.assign({}, g, { id: 'g_'+Date.now(), title: (g.title||'Copie')+' (copie)', createdAt: new Date().toISOString() }); all.push(copy); saveGoals(all); render(); }
+
+        // Export all
+        document.getElementById('btnExportAll').addEventListener('click', ()=>{ const data=JSON.stringify(getGoals(),null,2); const blob = new Blob([data],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='capella_goals_export.json'; a.click(); URL.revokeObjectURL(url); });
+
+        // Import
+        document.getElementById('importFile').addEventListener('change', e=>{
+            const f = e.target.files[0]; if(!f) return; const reader = new FileReader(); reader.onload = ()=>{
+                try{ const imported = JSON.parse(reader.result||'[]'); if(!Array.isArray(imported)) throw new Error('Format invalide'); const current = getGoals(); // merge: append new entries, ensure unique ids
+                    imported.forEach(it=>{ if(!it.id) it.id = 'g_'+Date.now() + Math.floor(Math.random()*1000); current.push(it); }); saveGoals(current); render(); alert('Import terminé');
+                }catch(err){ alert('Erreur import: '+err.message); }
+            }; reader.readAsText(f);
+        });
+
+        // search/filter/sort listeners
+        [searchEl, filterEl, sortEl].forEach(el=> el.addEventListener('input', render));
+
+        // initial render
+        render();
+    </script>
+</body>
+</html>
